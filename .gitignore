@@ -1,0 +1,4 @@
+/venv/
+.idea
+tg_openai/logs/
+tg_openai/settings/.env
