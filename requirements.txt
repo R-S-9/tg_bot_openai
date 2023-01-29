@@ -1,0 +1,5 @@
+openai==0.26.4
+pyTelegramBotAPI==4.9.0
+python-dotenv==0.21.1
+aiogram==2.24
+loguru==0.6.0
