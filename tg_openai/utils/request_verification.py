@@ -5,7 +5,7 @@ from tg_openai.apps.app_openai import OpenaiChatBot
 
 class RequestVerification:
     @staticmethod
-    async def checking_for_type_request(text: str):
+    async def checking_for_type_request(text: str, api_key: str or None):
         """
             Если в запросе есть слово 'Изображение', то вызывается
             функция где, генерируется изображения
@@ -26,16 +26,18 @@ class RequestVerification:
             try:
                 quantity = re.findall('[0-9]', list_text[0])
 
-                if re.findall('[0-9]', list_text[0]):
+                if re.findall('[0-9]', list_text[0]) and api_key:
                     quantity = int(quantity[0])
                 else:
                     quantity = 1
             except Exception:
                 quantity = 1
-
             return await OpenaiChatBot().request_openai_image(
                 f"Изображение {' '.join(list_text[1:])}",
                 "1024x1024",
-                quantity
+                quantity,
+                api_key,
             )
-        return await OpenaiChatBot().request_openai_completion(text)
+        return await OpenaiChatBot().request_openai_completion(
+            text, api_key
+        )

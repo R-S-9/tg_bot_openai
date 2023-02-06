@@ -50,9 +50,9 @@ class BotAdministration:
                 await dp.bot.send_message(
                     chat_id=admin,
                     text=f'Ошибка регистрации заявки на помощь пользователю: '
-                         f'{user_name}.'
+                         f'{user_name}.\nОшибка: {_ex}'
                 )
                 logger.error(
                     'Ошибка регистрации заявки на помощь пользователю: '
-                    f'{user_name}, дата: {datetime.now()}.'
+                    f'{user_name}, дата: {datetime.now()}. Ошибка: {_ex}'
                 )
