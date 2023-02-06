@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import openai
 from dotenv import load_dotenv
@@ -9,18 +10,20 @@ class OpenaiChatBot:
         load_dotenv()
 
         self.api_key = os.environ.get("API_KEY")
-        self.size = "1024x1024"
-        self.quantity = 1
+        self.size = os.environ.get('IMAGE_SIZE')
+        self.quantity = os.environ.get('IMAGE_QUANTITY')
 
     async def request_openai_image(
-            self, text: str, size: str, quantity: int
-    ):
-        openai.api_key = self.api_key
-
+            self, text: str, size: str, quantity: int, api_key: str
+    ) -> tuple[Any, bool]:
         if not size:
             size = self.size
         if not quantity:
             quantity = self.quantity
+        if not api_key:
+            api_key = self.api_key
+
+        openai.api_key = api_key
 
         return openai.Image.create(
             prompt=text,
@@ -28,8 +31,13 @@ class OpenaiChatBot:
             size=size,
         )['data'], True
 
-    async def request_openai_completion(self, text):
-        openai.api_key = self.api_key
+    async def request_openai_completion(
+            self, text: str, api_key: str
+    ) -> tuple[Any, bool]:
+        if not api_key:
+            api_key = self.api_key
+
+        openai.api_key = api_key
 
         return openai.Completion.create(
             model="text-davinci-003",
