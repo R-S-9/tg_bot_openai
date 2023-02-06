@@ -1,8 +1,6 @@
-from aiogram import executor
-from aiogram import Dispatcher
+from aiogram import executor, Dispatcher
 
 from handlers import dp
-# from
 from utils.notify_admins import BotAdministration
 from utils.set_bot_commands import set_default_commands
 
