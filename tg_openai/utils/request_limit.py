@@ -12,7 +12,6 @@ class RequestLimited:
             port=int(os.getenv("REDIS_PORT")),
             db=int(os.getenv("REDIS_DB"))
         )
-        # self.redis_client = redis.Redis.from_url = ...
 
     @staticmethod
     async def check_user(message: types.Message) -> bool:
@@ -21,7 +20,7 @@ class RequestLimited:
         if req_lim.request_is_limited(
                 f'usr-1-{message.chat.id}', 5, timedelta(minutes=1)
         ) or req_lim.request_is_limited(
-            f'usr-2-{message.chat.id}', 50, timedelta(days=1)
+            f'usr-2-{message.chat.id}', 10, timedelta(days=1)
         ):
             await message.answer(
                 'Превышен лимит запросов за промежуток времени, повторите '
