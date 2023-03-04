@@ -1,5 +1,4 @@
 import datetime
-import os
 
 from loguru import logger
 from aiogram import types
@@ -8,7 +7,8 @@ from dotenv import load_dotenv
 from loader import dp, bot
 from tg_openai.utils.request_verification import RequestVerification
 from tg_openai.utils.request_limit import RequestLimited
-from .subscribers import number_request
+
+from db.sqlite_base import SQLConnect
 
 
 logger.add(
@@ -27,27 +27,25 @@ class RequestAPI:
     @dp.message_handler()
     async def handle_text(message: types.Message):
         """Главный handler"""
-        if message.from_user.username in number_request:
-            # TODO add DB sqlite3
-            openai_api_key = os.environ.get(
-                f"API_KEY_{message.from_user.username}"
-            )
-            number_request[message.from_user.username] += 1
-        else:
-            limit_false = await RequestLimited().check_user(message)
-            if limit_false is False:
-                return None
-            openai_api_key = None
-            number_request['anonymous'] += 1
+
+        if not SQLConnect().user_exists(message.from_user.username):
+            if await RequestLimited().check_user(message) is False:
+                return
+        await message.answer("Обрабатываю ваш запрос!")
 
         try:
             response, is_image = await RequestVerification. \
                 checking_for_type_request(
-                    message.text, openai_api_key
+                    message.text, message.from_user.username
                 )
 
             print(
-                f'Запрос {number_request}, {datetime.datetime.now()}'
+                'Запрос '
+                f'{message.from_user.username}, {datetime.datetime.now()}'
+            )
+
+            number_request = SQLConnect().get_number_request_by_user_name(
+                message.from_user.username
             )
 
             if is_image:
@@ -62,15 +60,15 @@ class RequestAPI:
                 await bot.send_media_group(message.chat.id, media=media)
             else:
                 await message.answer(
-                    f'Запрос №{number_request[message.from_user.username]}\n'
+                    f'Запрос №{number_request}\n\n'
                     f'{response}\n\n[ChatGPTRuBot Подписаться]'
                     '(https://t.me/ru_gpt_bot)',
                     parse_mode='Markdown'
                 )
         except Exception as _ex:
             logger.error(
-                f'Запрос №{number_request} получил ошибку, вопрос:'
-                f'{message.text}, ошибка:{_ex}'
+                f'Запрос от {message.from_user.username} получил ошибку,'
+                f' вопрос: {message.text}, ошибка:{_ex}'
             )
             await message.answer(
                 f'Ошибка! {_ex}'
