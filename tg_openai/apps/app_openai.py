@@ -4,6 +4,8 @@ from typing import Any
 import openai
 from dotenv import load_dotenv
 
+from tg_openai.db.sqlite_base import SQLConnect
+
 
 class OpenaiChatBot:
     def __init__(self):
@@ -14,37 +16,44 @@ class OpenaiChatBot:
         self.quantity = os.environ.get('IMAGE_QUANTITY')
 
     async def request_openai_image(
-            self, text: str, size: str, quantity: int, api_key: str
+            self, text: str, size: str, quantity: int, username: str
     ) -> tuple[Any, bool]:
-        if not size:
-            size = self.size
-        if not quantity:
-            quantity = self.quantity
-        if not api_key:
-            api_key = self.api_key
+        """Create image"""
+        try:
+            if not size:
+                size = self.size
+            if not quantity:
+                quantity = self.quantity
 
-        openai.api_key = api_key
+            openai.api_key = SQLConnect().get_token_by_user_name(username)
 
-        return openai.Image.create(
-            prompt=text,
-            n=quantity,
-            size=size,
-        )['data'], True
+            return openai.Image.create(
+                prompt=text,
+                n=quantity,
+                size=size,
+            )['data'], True
+        except Exception as _ex:
+            print(_ex)
+        return "", True
 
+    @staticmethod
     async def request_openai_completion(
-            self, text: str, api_key: str
+            text: str, username: str
     ) -> tuple[Any, bool]:
-        if not api_key:
-            api_key = self.api_key
+        """Create openai text"""
 
-        openai.api_key = api_key
+        try:
+            openai.api_key = SQLConnect().get_token_by_user_name(username)
 
-        return openai.Completion.create(
-            model="text-davinci-003",
-            prompt=text,
-            temperature=0.4,
-            max_tokens=1024,
-            top_p=1.0,
-            frequency_penalty=0.5,
-            presence_penalty=0.0,
-        )["choices"][0]["text"], False
+            return openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": text
+                    }
+                ]
+            )["choices"][0]["message"]["content"], False
+        except Exception as _ex:
+            print(_ex)
+        return "", False
